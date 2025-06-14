@@ -1,0 +1,32 @@
+Prompt #0: 
+"Compare my resume to this job description and summarize the key differences in job focus, required skills, and responsibilities. "
+
+Prompt #1: 
+ "I want you to help me optimize my resume to be ATS-friendly for a specific job posting. I'll provide you with:
+My current resume (no edits needed yet).
+The specific job description/posting.
+For this initial step, do not make any edits or suggestions yet. First, carefully review and analyze both my resume and the provided job posting. Confirm once you fully understand the role requirements, necessary skills, keywords, and my existing experience.
+I'll provide additional prompts afterward to guide you on specific, truthful, and accurate changes aimed at passing ATS screenings.
+Please confirm your understanding and wait for further instructions.”
+
+Prompt #2:
+"Rewrite my professional summary to align with this job description while keeping it ATS-friendly. Maintain the same tone and core message  including as much of the original copy as possible and overall length while emphasizing the most relevant skills and experience for this role."
+
+Prompt #3: 
+"Adjust my job titles slightly to better align with this role while keeping them accurate and truthful. Provide multiple variations that improve ATS recognition."
+
+Prompt #4: 
+"Revise appropriate work or professional history section bullet points to highlight responsibilities that are most relevant to this role while incorporating ATS keywords from the job description. Keep the format concise and action-oriented. Keep as much of the original copy as possible while making small and truthful edits. Provide the original bullet point with the new version for me to review."
+
+Prompt #5: 
+"Review my skills section and suggest small edits or additions to better match this role’s job description while keeping it ATS-friendly."
+Why?
+
+Prompt #7: 
+“Evaluate my revised resume against this job description. Are there any more changes needed to maximize ATS compatibility while keeping the content natural and professional?"
+Why?
+
+Prompt #8: 
+"Create three versions of my resume tailored to different job descriptions in this field. Each should highlight slightly different aspects while keeping the core content consistent and ATS-friendly."
+Why?
+
