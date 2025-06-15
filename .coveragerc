@@ -1,0 +1,9 @@
+[run]
+omit =
+    */__init__.py
+    tests/*
+    */tests/*
+    venv/*
+    */venv/*
+    applygorithminator.py 
+    cli.py

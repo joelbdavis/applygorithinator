@@ -8,6 +8,9 @@ class FileReadError(Exception):
 class LLMJsonParseError(Exception):
     pass
 
+class GapsJsonParseError(Exception):
+    pass
+
 def extract_llm_content(result):
     """Extracts the main content from an LLM result, handling both dict and string."""
     if isinstance(result, dict):
@@ -34,8 +37,8 @@ def extract_gaps_json(output):
     json_str = match.group(1)
     try:
         return json.loads(json_str)
-    except Exception:
-        return []
+    except Exception as e:
+        raise GapsJsonParseError(f"Failed to parse GAPS JSON: {e}\nRaw: {json_str}")
 
 def cleanse_llm_response(result):
     """Cleanses the LLM response, handling dict or string and normalizing newlines."""

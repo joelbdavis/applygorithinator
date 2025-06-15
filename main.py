@@ -10,66 +10,49 @@ from utils.text_parsing import (
     FileReadError,
     LLMJsonParseError,
     format_dict_list,
+    GapsJsonParseError,
 )
 from utils.story_manager import StoryManager
 from utils.session_logger import SessionLogger
 import cli
 
-cli.display_banner()
+def get_resume_and_job_description(cli):
+    resume_path = cli.prompt_for_resume_path("resources/resumes/original_resume.txt")
+    job_description_path = cli.prompt_for_job_description_path("resources/job_descriptions/job_description.txt")
+    return resume_path, job_description_path
 
-# Prompt for file paths
-resume_path = cli.prompt_for_resume_path("resources/resumes/original_resume.txt")
-job_description_path = cli.prompt_for_job_description_path("resources/job_descriptions/job_description.txt")
-
-# Read file contents
-try:
+def read_inputs(resume_path, job_description_path):
     resume_text = read_file_or_exit(resume_path, "resume")
     job_description = read_file_or_exit(job_description_path, "job description")
-except FileReadError as e:
-    cli.display_error(e)
-    exit(1)
+    return resume_text, job_description
 
-# Initialize StoryManager
-story_manager = StoryManager()
+def run_job_fit_analysis(resume_text, job_description, api_key):
+    combined_experience = f"Resume:\n{resume_text}"
+    result = run_job_fit_chain(combined_experience, job_description, api_key)
+    return cleanse_llm_response(result)
 
-# Load all stories
-all_stories = story_manager.get_all_stories()
-relevant_stories = story_manager.get_relevant_stories()
+def parse_job_fit_output(output):
+    alignment = extract_alignment_section(output)
+    gaps = extract_gaps_json(output)
+    return alignment, gaps
 
-# Prepare session logging
-logger = SessionLogger()
-logger.log_session_header(resume_path, job_description_path, resume_text, stories_context, job_description)
-
-cli.display_analyzing_job_fit()
-# PASS 1: Run job fit analysis with only resume and job description
-combined_experience = f"Resume:\n{resume_text}"
-result = run_job_fit_chain(combined_experience, job_description, OPENAI_API_KEY)
-output = cleanse_llm_response(result)
-
-alignment = extract_alignment_section(output)
-cli.display_alignment(alignment)
-
-gaps = extract_gaps_json(output)
-cli.display_gaps(gaps)
-
-logger.log_output(output)
-
-# --- PASS 2: For each gap, check stories with LLM ---
-if gaps:
-    cli.display_collect_stories_intro()
+def analyze_gaps_with_llm(gaps, relevant_stories, api_key):
+    answered = []
+    unanswered = []
     for gap in gaps:
         skill = gap.get('skill', '(unknown skill)')
         question = gap.get('question', '(no question)')
-        try:
-            # Use LLM to check if any story answers the gap
-            answered, summary, confidence = story_answers_gap_llm(skill, question, relevant_stories, OPENAI_API_KEY)
-        except LLMJsonParseError as e:
-            cli.display_error(e)
-            exit(1)
-        if answered:
-            cli.display_story_already_answered(skill, summary)
-            logger.log_story_already_answered(skill, summary)
-            continue
+        is_answered, summary, confidence = story_answers_gap_llm(skill, question, relevant_stories, api_key)
+        if is_answered:
+            answered.append({'gap': gap, 'summary': summary, 'confidence': confidence})
+        else:
+            unanswered.append(gap)
+    return answered, unanswered
+
+def process_unanswered_gaps(unanswered_gaps, story_manager, logger, cli):
+    for gap in unanswered_gaps:
+        skill = gap.get('skill', '(unknown skill)')
+        question = gap.get('question', '(no question)')
         response = cli.prompt_for_story(skill, question)
         logger.log_story_prompt(skill, question)
         if response.lower() != 'skip':
@@ -81,8 +64,45 @@ if gaps:
             cli.display_no_experience()
             logger.log_no_experience(skill, question)
 
-logger.save()
-cli.display_session_log_path(logger.session_file)
+def finalize_session(logger, cli):
+    logger.save()
+    cli.display_session_log_path(logger.session_file)
+
+def run_workflow(api_key, cli, story_manager, logger):
+    resume_path, job_description_path = get_resume_and_job_description(cli)
+    try:
+        resume_text, job_description = read_inputs(resume_path, job_description_path)
+    except FileReadError as e:
+        cli.display_error(e)
+        exit(1)
+    logger.log_session_header(resume_path, job_description_path, resume_text, job_description)
+    job_fit_analysis = run_job_fit_analysis(resume_text, job_description, api_key)
+    try:
+        alignment, gaps = parse_job_fit_output(job_fit_analysis)
+    except GapsJsonParseError as e:
+        cli.display_error(e)
+        exit(1)
+    cli.display_alignment(alignment)
+    cli.display_gaps(gaps)
+    logger.log_output(job_fit_analysis)
+    if gaps:
+        cli.display_collect_stories_intro()
+        relevant_stories = story_manager.get_relevant_stories()
+        try:
+            answered, unanswered = analyze_gaps_with_llm(gaps, relevant_stories, api_key)
+        except LLMJsonParseError as e:
+            cli.display_error(e)
+            exit(1)
+        for item in answered:
+            cli.display_story_already_answered(item['gap'].get('skill', '(unknown skill)'), item['summary'])
+        process_unanswered_gaps(unanswered, story_manager, logger, cli)
+    finalize_session(logger, cli)
+
+if __name__ == '__main__':  # pragma: no cover
+    cli.display_banner()  # pragma: no cover
+    story_manager = StoryManager()  # pragma: no cover
+    logger = SessionLogger()  # pragma: no cover
+    run_workflow(OPENAI_API_KEY, cli, story_manager, logger)  # pragma: no cover
 
 
 

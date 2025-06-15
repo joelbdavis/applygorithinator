@@ -1,6 +1,6 @@
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from config import OPENAI_MODEL, OPENAI_MAX_TOKENS
+from utils.config import OPENAI_MODEL, OPENAI_MAX_TOKENS
 
 job_fit_prompt = PromptTemplate(
     input_variables=["combined_experience", "job_description"],

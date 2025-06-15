@@ -31,18 +31,16 @@ class SessionLogger:
     def log_output(self, output):
         self.entries.append(output + "\n")
 
-    def log_session_header(self, resume_path, job_description_path, resume_text, stories_context, job_description):
+    def log_session_header(self, resume_path, job_description_path, resume_text, job_description):
         self.log("=== Applygorithminator Session Log ===")
         self.log(f"Timestamp: {self.timestamp}")
-        self.log(f"Resume file: {resume_path}")
-        self.log(f"Job description file: {job_description_path}\n")
         self.log("--- Resume ---")
+        self.log(f"file: {resume_path}")
         self.log(resume_text + "\n")
-        self.log("--- Additional Experience Stories ---")
-        self.log(stories_context.strip() + "\n")
-        self.log("--- Job Description ---")
+        self.log("\n--- Job Description ---")
+        self.log(f"file: {job_description_path}\n")
         self.log(job_description + "\n")
-        self.log("--- Job Fit Analysis ---")
+        self.log("\n--- Job Fit Analysis ---")
 
     def save(self):
         os.makedirs(os.path.dirname(self.session_file), exist_ok=True)
